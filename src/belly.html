@@ -5,43 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Belly · Tab Pet</title>
   <link rel="stylesheet" href="ui.css">
-  <style>
-    body { padding: 40px 16px 64px; }
-    main { max-width: 760px; margin: 0 auto; display: grid; gap: 16px; }
-    header { display: flex; gap: 16px; align-items: center; }
-    header canvas { width: 96px; height: 72px; image-rendering: pixelated; border-radius: 12px; border: 6px solid #3b0f1f; flex: none; }
-    h1 { font-size: 30px; }
-    .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .bar input { flex: 1 1 260px; min-height: 44px; font-size: 15px; }
-    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-    li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--surface); border: 1px solid var(--hair); min-width: 0; }
-    li .ico { width: 18px; height: 18px; border-radius: 5px; flex: none; display: grid; place-items: center; font: 700 10px/1 var(--sans); color: #fff; background: var(--shell-dark); overflow: hidden; }
-    li .ico img { width: 18px; height: 18px; }
-    li .txt { flex: 1; min-width: 0; display: grid; }
-    li .txt a { color: var(--ink); text-decoration: none; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    li .txt a:hover { text-decoration: underline; }
-    li .txt span { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    li small { color: var(--muted); flex: none; }
-    li button { padding: 7px 10px; font-size: 12px; }
-    .empty { color: var(--muted); padding: 24px 0; text-align: center; }
-    @media (max-width: 520px) { li small { display: none; } }
-  </style>
+  <link rel="stylesheet" href="belly.css">
 </head>
 <body>
-  <main>
-    <header>
-      <canvas id="pet" width="64" height="48" role="img" aria-label="Your pet"></canvas>
-      <div>
-        <h1 id="title">Belly</h1>
-        <p class="muted" id="sub">Every tab your pet ate. Search it and bring anything back.</p>
+  <main class="belly">
+    <header class="top">
+      <div class="pet-frame"><canvas id="pet" width="64" height="48" role="img" aria-label="Your pet"></canvas></div>
+      <div class="intro">
+        <h1 id="title">The belly</h1>
+        <p id="sub" class="muted">Every tab your pet ate, kept safe.</p>
       </div>
     </header>
-    <div class="bar">
-      <input type="search" id="q" placeholder="Search titles and links" aria-label="Search eaten tabs" autofocus>
-      <button class="primary" id="restore-all" hidden></button>
+
+    <div class="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <input type="search" id="q" placeholder="What were you looking for?" aria-label="Search eaten tabs" autocomplete="off" spellcheck="false">
+      <kbd id="slash" aria-hidden="true">/</kbd>
     </div>
-    <ul id="list"></ul>
+    <p class="keys muted" id="keys">Type to search · <kbd>↑</kbd> <kbd>↓</kbd> to move · <kbd>Enter</kbd> brings it back · <kbd>Esc</kbd> clears</p>
+
+    <nav class="shelves" id="shelves" aria-label="Filter by site"></nav>
+
+    <section id="results" aria-live="polite"></section>
   </main>
+
+  <div class="toast" id="toast" role="status" hidden></div>
   <script type="module" src="belly.js"></script>
 </body>
 </html>

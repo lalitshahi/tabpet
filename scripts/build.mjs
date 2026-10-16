@@ -16,7 +16,7 @@ const targets = {
   chromium: {
     ...base,
     minimum_chrome_version: '121',
-    permissions: [...base.permissions, 'system.memory'],
+    permissions: [...base.permissions, 'system.memory', 'favicon'],
     background: { service_worker: 'src/background.js', type: 'module' },
   },
   firefox: {

@@ -127,3 +127,40 @@ test('belly search and cap', () => {
   assert.equal(big.length, BELLY_MAX);
   assert.equal(big[0].i, 'new');
 });
+
+import { groupMeals, topSites, rankBelly, hostOf, mealWhen } from '../src/logic.js';
+
+test('belly groups into meals, autopilot merged per day', () => {
+  const t1 = NOW - 2 * DAY, t2 = NOW - 3 * 3600e3, a1 = NOW - 5 * 3600e3, a2 = NOW - 4 * 3600e3;
+  const log = [{ t: t1, n: 2, mb: 300, kind: 'ghosts' }, { t: t2, n: 1, mb: 50, kind: 'dups' }, { t: a1, n: 1, mb: 10, kind: 'auto' }, { t: a2, n: 1, mb: 20, kind: 'auto' }];
+  const belly = [
+    { url: 'https://a.com/1', ateAt: t2 }, { url: 'https://b.com', ateAt: a2 }, { url: 'https://c.com', ateAt: a1 },
+    { url: 'https://a.com/2', ateAt: t1 }, { url: 'https://a.com/3', ateAt: t1 },
+  ];
+  const meals = groupMeals(belly, log);
+  assert.deepEqual(meals.map((m) => [m.kind, m.items.length, m.mb]), [['dups', 1, 50], ['auto', 2, 30], ['ghosts', 2, 300]]);
+});
+
+test('top sites and ranked search', () => {
+  const belly = [
+    { title: 'Webhooks · Stripe Docs', url: 'https://stripe.com/docs/webhooks', ateAt: 1 },
+    { title: 'Pricing', url: 'https://www.stripe.com/pricing', ateAt: 2 },
+    { title: 'Ryokan in Kyoto', url: 'https://hotels.example/kyoto', ateAt: 3 },
+    { title: 'Stripe vs Paddle for indie apps', url: 'https://blog.example/post', ateAt: 4 },
+  ];
+  assert.deepEqual(topSites(belly)[0], { host: 'stripe.com', n: 2 });
+  assert.equal(hostOf('https://www.stripe.com/x'), 'stripe.com');
+  const r = rankBelly(belly, 'stripe');
+  assert.equal(r.length, 3);
+  assert.equal(r[0].title, 'Stripe vs Paddle for indie apps');
+  assert.equal(rankBelly(belly, 'kyo').length, 1);
+  assert.equal(rankBelly(belly, '', 'stripe.com').length, 2);
+  assert.equal(rankBelly(belly, 'pricing', 'hotels.example').length, 0);
+  assert.equal(rankBelly(belly, 'c++ (').length, 0);
+});
+
+test('meal times read like a person would say them', () => {
+  assert.match(mealWhen(NOW - 3600e3, NOW), /^Today, /);
+  assert.match(mealWhen(NOW - DAY, NOW), /^Yesterday, /);
+  assert.doesNotMatch(mealWhen(NOW - 20 * DAY, NOW), /Today|Yesterday/);
+});

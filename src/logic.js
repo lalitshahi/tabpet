@@ -176,3 +176,77 @@ export function ago(ms) {
   const d = Math.round(h / 24);
   return `${d}d ago`;
 }
+
+// ---------- Belly browsing: meals, sites, ranked search ----------
+export function hostOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; }
+}
+
+/** A stable colour per site, for letter tiles when there is no favicon. */
+export function hueFor(host) {
+  let h = 0;
+  for (const c of host) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return h;
+}
+
+export const MEAL_LABEL = { ghosts: 'Forgotten tabs', dups: 'Duplicates', bankrupt: 'Tab bankruptcy', auto: 'Autopilot snacks' };
+
+/**
+ * Groups eaten tabs into meals: one per eating session, except autopilot,
+ * whose hourly snacks merge into one meal per day. Newest first.
+ */
+export function groupMeals(belly, log) {
+  const byTime = new Map(log.map((e) => [e.t, e]));
+  const meals = new Map();
+  for (const item of belly) {
+    const entry = byTime.get(item.ateAt);
+    const kind = entry?.kind || 'ghosts';
+    const key = kind === 'auto' ? `auto-${dayKey(new Date(item.ateAt))}` : `m-${item.ateAt}`;
+    if (!meals.has(key)) meals.set(key, { key, kind, at: item.ateAt, items: [], times: new Set() });
+    const m = meals.get(key);
+    m.items.push(item);
+    m.at = Math.max(m.at, item.ateAt);
+    m.times.add(item.ateAt);
+  }
+  return [...meals.values()]
+    .map((m) => ({ key: m.key, kind: m.kind, at: m.at, items: m.items, mb: [...m.times].reduce((s, t) => s + (byTime.get(t)?.mb || 0), 0) }))
+    .sort((a, b) => b.at - a.at);
+}
+
+/** Most-eaten sites first. */
+export function topSites(belly, limit = 12) {
+  const counts = new Map();
+  for (const b of belly) { const h = hostOf(b.url); if (h) counts.set(h, (counts.get(h) || 0) + 1); }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, limit).map(([host, n]) => ({ host, n }));
+}
+
+/** Every word must match the title, site or link. Title hits rank above site hits, newer above older. */
+export function rankBelly(belly, query, host = '') {
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const out = [];
+  for (const b of belly) {
+    const h = hostOf(b.url);
+    if (host && h !== host) continue;
+    const title = (b.title || '').toLowerCase();
+    const url = (b.url || '').toLowerCase();
+    let score = 0;
+    let ok = true;
+    for (const w of words) {
+      const s = (title.startsWith(w) ? 4 : 0) + (new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(title) ? 3 : title.includes(w) ? 2 : 0) + (h.includes(w) ? 2 : 0) + (url.includes(w) ? 1 : 0);
+      if (!s) { ok = false; break; }
+      score += s;
+    }
+    if (ok) out.push({ item: b, score });
+  }
+  return out.sort((a, b) => b.score - a.score || b.item.ateAt - a.item.ateAt).map((x) => x.item);
+}
+
+export function mealWhen(at, now = Date.now()) {
+  const d = new Date(at);
+  const n = new Date(now);
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if (dayKey(d) === dayKey(n)) return `Today, ${time}`;
+  if (dayKey(d) === dayKey(new Date(now - DAY))) return `Yesterday, ${time}`;
+  if (now - at < 6 * DAY) return `${d.toLocaleDateString([], { weekday: 'long' })}, ${time}`;
+  return d.toLocaleDateString([], { day: 'numeric', month: 'short', year: n.getFullYear() === d.getFullYear() ? undefined : 'numeric' });
+}

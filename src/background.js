@@ -103,9 +103,25 @@ async function eat(kind) {
 async function restore(uids) {
   const { belly } = await load('belly');
   const pick = belly.filter((b) => uids.includes(b.uid));
-  for (const b of pick) if (b.url) await api.tabs.create({ url: b.url, active: false });
+  const tabIds = [];
+  const opened = new Set();
+  for (const b of pick) {
+    const key = (b.url || '').replace(/#.*$/, '');
+    if (!b.url || opened.has(key)) continue; // a page eaten three times comes back once
+    opened.add(key);
+    tabIds.push((await api.tabs.create({ url: b.url, active: false })).id);
+  }
   await save({ belly: belly.filter((b) => !uids.includes(b.uid)) });
-  return { n: pick.length };
+  return { n: pick.length, tabIds };
+}
+
+/** Undo for "bring back": close the reopened tabs and put the items back in the belly. */
+async function unrestore(items, tabIds) {
+  if (tabIds.length) await api.tabs.remove(tabIds).catch(() => {});
+  const { belly } = await load('belly');
+  const have = new Set(belly.map((b) => b.uid));
+  await save({ belly: [...items.filter((i) => !have.has(i.uid)), ...belly].sort((a, b) => b.ateAt - a.ateAt) });
+  return { ok: true };
 }
 
 // ---------- Hourly tick: tidy days and autopilot ----------
@@ -158,6 +174,7 @@ api.runtime.onMessage.addListener((msg, _sender, reply) => {
   const run = {
     eat: () => eat(msg.kind),
     restore: () => restore(msg.uids || []),
+    unrestore: () => unrestore(msg.items || [], msg.tabIds || []),
     paint: () => paint().then(() => ({ ok: true })),
     tick: () => tick().then(() => ({ ok: true })),
     capabilities: async () => ({ memory: hasMemoryApi() }),
