@@ -44,7 +44,7 @@ const globe = hasFavicons ? new Promise((res) => {
 
 function fav(item) {
   const h = hostOf(item.url) || '?';
-  const box = el('span', { class: 'fav', 'aria-hidden': 'true', style: `background:hsl(${hueFor(h)} 55% 45%)` }, h[0].toUpperCase());
+  const box = el('span', { class: 'fav', 'aria-hidden': 'true', style: `background:hsl(${hueFor(h)} 36% 52%)` }, h[0].toUpperCase());
   const src = item.favIconUrl || (hasFavicons && item.url ? api.runtime.getURL(`/_favicon/?pageUrl=${encodeURIComponent(item.url)}&size=32`) : '');
   if (src) {
     const img = el('img', { alt: '', src, loading: 'lazy' });
@@ -101,7 +101,7 @@ function renderHeader() {
     : 'Nothing in here yet.';
   if (pet) {
     const scene = document.createElement('canvas'); scene.width = 64; scene.height = 48;
-    drawScene(scene.getContext('2d'), { pet: petById(pet.petId), shiny: pet.shiny, stage: stageFor(xpFor(pet)).key, face: S.belly.length ? 'happy' : 'dot' });
+    drawScene(scene.getContext('2d'), { pet: petById(pet.petId), shiny: pet.shiny, stage: stageFor(xpFor(pet)).key, face: S.belly.length ? 'happy' : 'dot', bg: false });
     const x = $('pet').getContext('2d'); x.imageSmoothingEnabled = false;
     x.clearRect(0, 0, 64, 48); x.drawImage(scene, 12, 12, 40, 30, 0, 0, 64, 48);
   }
@@ -223,6 +223,13 @@ async function forget(items) {
     await reload();
   });
 }
+
+function paintSky() {
+  const h = new Date().getHours();
+  const sky = h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 17 ? 'day' : h >= 17 && h < 20 ? 'dusk' : 'night';
+  document.querySelectorAll('[data-world]').forEach((w) => { w.dataset.sky = sky; });
+}
+paintSky();
 
 async function reload() {
   S = await load('belly', 'log', 'totals', 'pets', 'activeUid');

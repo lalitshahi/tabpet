@@ -25,7 +25,16 @@ async function refresh() {
 }
 
 const VIEWS = ['v-egg', 'v-reveal', 'v-autopsy', 'v-result', 'v-main', 'v-pets', 'v-share', 'v-settings'];
+function skyNow(d = new Date()) {
+  const h = d.getHours();
+  return h >= 5 && h < 8 ? 'dawn' : h >= 8 && h < 17 ? 'day' : h >= 17 && h < 20 ? 'dusk' : 'night';
+}
+function paintSky() {
+  const sky = skyNow();
+  document.querySelectorAll('[data-world]').forEach((w) => { w.dataset.sky = sky; });
+}
 function show(id) {
+  paintSky();
   for (const v of VIEWS) $(v).hidden = v !== id;
   window.scrollTo(0, 0);
 }
@@ -71,10 +80,9 @@ function revealAnim(record) {
   const dur = reduced ? 150 : 1600;
   const step = (t) => {
     const k = Math.min(1, (t - t0) / dur);
-    ctx.fillStyle = '#e4f2de'; ctx.fillRect(0, 0, 64, 48);
-    ctx.fillStyle = '#c3dbb6'; ctx.fillRect(0, 42, 64, 6);
+    ctx.clearRect(0, 0, 64, 48);
     if (k < 1) {
-      drawEgg(ctx, record.egg, 32, 30, reduced ? 0 : Math.sin(t / 50) * k * 2, k > 0.4);
+      drawEgg(ctx, record.egg, 32, 31, reduced ? 0 : Math.sin(t / 50) * k * 2, k > 0.4);
       requestAnimationFrame(step);
     } else revealDone(record);
   };
@@ -84,7 +92,7 @@ function revealAnim(record) {
 function revealDone(record) {
   const p = petById(record.petId);
   const ctx = $('reveal-lcd').getContext('2d');
-  drawScene(ctx, { pet: p, shiny: record.shiny, stage: 'baby', face: 'happy' });
+  drawScene(ctx, { pet: p, shiny: record.shiny, stage: 'baby', face: 'happy', bg: false });
   if (!reduced) for (let i = 0; i < 14; i++) disc(ctx, (i * 13) % 60 + 2, (i * 7) % 18 + 2, 0, 0, ['#ff86a8', '#ffcf5c', '#7fd6ff', '#7ccf8a'][i % 4]);
   $('reveal-title').textContent = record.shiny ? `A shiny ${p.species.toLowerCase()}!` : p.rarity === 'legendary' ? `A legendary ${p.species.toLowerCase()}!` : `It's a ${p.species.toLowerCase()}!`;
   setHTML($('reveal-pills'), `<span class="pill ${p.rarity}">${p.rarity}</span>${record.shiny ? '<span class="pill shiny">Shiny</span>' : ''}<span class="muted small">${EGGS[record.egg].label} egg</span>`);
@@ -118,15 +126,15 @@ async function renderAutopsy() {
   await save({ autopsy: { ...snap, at: Date.now() } });
   const name = pet().name;
   $('autopsy-lead').textContent = `${name} looked around your browser. Here's what it found.`;
-  setHTML($('autopsy-stats'), statsHtml([['Tabs', snap.tabs], ['Windows', snap.windows], ['Ghosts', snap.ghosts], ['Oldest', `${snap.oldestDays}d`]]));
+  setHTML($('autopsy-stats'), statsHtml([['Tabs', snap.tabs], ['Windows', snap.windows], ['Forgotten', snap.ghosts], ['Oldest', `${snap.oldestDays}d`]]));
   $('persona-name').textContent = persona.name;
   $('persona-line').textContent = persona.line;
   const btn = $('eat-first');
   if (snap.ghosts) {
-    btn.textContent = `Let ${name} eat the ${plural(snap.ghosts, 'ghost tab')}`;
+    btn.textContent = `Let ${name} eat ${plural(snap.ghosts, 'forgotten tab')}`;
     btn.onclick = () => feed('ghosts', true);
   } else {
-    btn.textContent = 'No ghosts yet. Say hi';
+    btn.textContent = 'Nothing forgotten yet. Say hi';
     btn.onclick = () => renderMain();
   }
   $('skip-first').onclick = () => renderMain();
@@ -179,7 +187,7 @@ function setFeeding(on) {
 function renderResult(r) {
   show('v-result');
   const p = pet();
-  drawScene($('result-lcd').getContext('2d'), { pet: petById(p.petId), shiny: p.shiny, stage: 'baby', face: 'happy', eating: true });
+  drawScene($('result-lcd').getContext('2d'), { pet: petById(p.petId), shiny: p.shiny, stage: 'baby', face: 'happy', eating: true, bg: false });
   $('result-title').textContent = `${p.name} ate ${plural(r.n, 'tab')}`;
   $('result-big').textContent = r.mb >= 50 ? `about ${formatMemory(r.mb)} back` : `${plural(r.n, 'tab')} lighter`;
   $('result-big').hidden = false;
@@ -211,15 +219,15 @@ function renderMain(line) {
 
   $('m-name').textContent = p.name;
   $('m-mood').textContent = night ? (tabs.length <= 20 ? 'Asleep' : 'Awake at night') : mood.label;
-  $('m-hp').textContent = '♥'.repeat(mood.hp) + '♡'.repeat(5 - mood.hp);
-  $('m-count').textContent = `${tabs.length} TAB${tabs.length === 1 ? '' : 'S'}`;
+  $('m-count').textContent = plural(tabs.length, 'tab');
+  document.querySelector('.scene').dataset.mood = mood.key;
   $('m-stage').textContent = `${st.label} ${petById(p.petId).species.toLowerCase()}`;
   $('m-xp').textContent = st.next ? `${xpFor(p)} / ${st.next} XP to ${st.key === 'baby' ? 'teen' : 'grown'}` : `Fully grown · ${xpFor(p)} XP`;
   $('m-bar').style.width = `${Math.round(st.progress * 100)}%`;
-  setHTML($('m-stats'), statsHtml([['Tabs', tabs.length], ['Ghosts', ghosts], ['Dupes', perm ? dups : '–'], ['Belly', S.belly.length]]));
+  setHTML($('m-stats'), statsHtml([['Tabs', tabs.length], ['Forgotten', ghosts], ['Dupes', perm ? dups : '–'], ['Belly', S.belly.length]]));
 
   const g = $('m-ghosts');
-  g.textContent = ghosts ? `Eat ${plural(ghosts, 'ghost')}` : 'No ghosts';
+  g.textContent = ghosts ? `Feed ${p.name} ${plural(ghosts, 'forgotten tab')}` : 'Nothing forgotten. Nice.';
   g.disabled = !ghosts;
   g.onclick = () => feed('ghosts');
   const d = $('m-dups');
@@ -252,15 +260,27 @@ function startLcd() {
     let face = k === 'sleep' ? 'line' : k === 'awake' ? 'wide' : eating ? 'happy' : mood.face;
     const bob = reduced || k === 'buried' || k === 'sleep' ? 0 : Math.round(Math.sin(t / (k === 'thriving' || eating ? 160 : 420)) * 1.2);
     if (!reduced && face !== 'line' && t % 3200 < 120) face = 'line';
-    drawScene(ctx, { pet: petById(p.petId), shiny: p.shiny, stage: stageOf(p).key, face, night, eating, bob });
-    if (k === 'tired' || k === 'sleep') { const z = Math.floor(t / 600) % 3; ctx.fillStyle = night ? '#ffe9a8' : '#26301a'; ctx.font = '7px monospace'; ctx.fillText('z', 46, 18 - z); if (z) ctx.fillText('Z', 50, 13 - z); }
+    drawScene(ctx, { pet: petById(p.petId), shiny: p.shiny, stage: stageOf(p).key, face, night, eating, bob, bg: false });
+    const W = ctx.canvas.width, H = ctx.canvas.height, mid = W / 2, petY = Math.round(H * 0.64);
+    if (k === 'tired' || k === 'sleep') {
+      // Little pixel Zs drifting up from the pet's head.
+      const z = Math.floor(t / 700) % 3;
+      ctx.fillStyle = night ? 'rgba(255,240,200,.85)' : 'rgba(40,46,80,.55)';
+      const Z = (x, y, s) => { ctx.fillRect(x, y, s, 1); ctx.fillRect(x + s - 2, y + 1, 1, 1); if (s > 3) ctx.fillRect(x + 1, y + 2, 1, 1); ctx.fillRect(x, y + s - 2, s, 1); };
+      Z(mid + 12, petY - 16 - z, 3);
+      if (z) Z(mid + 16, petY - 22 - z, 4);
+    }
     const g = Math.min(ghostTabs(tabs, Date.now(), ghostMs()).length, 6);
     for (let i = 0; i < g && !night; i++) {
-      const a = t / 1400 + (i / g) * Math.PI * 2, gx = Math.round(32 + Math.cos(a) * 26), gy = Math.round(20 + Math.sin(a) * 11);
-      disc(ctx, gx, gy, 3, 3, '#ffffff'); ctx.fillRect(gx - 3, gy, 7, 3); ctx.fillStyle = '#26301a'; ctx.fillRect(gx - 1, gy - 1, 1, 1); ctx.fillRect(gx + 1, gy - 1, 1, 1);
+      // Forgotten tabs drift in the sky above the pet, never across its face.
+      const a = t / 1800 + (i / g) * Math.PI * 2;
+      const gx = Math.round(mid + Math.cos(a) * (W * 0.38)), gy = Math.round(H * 0.24 + Math.sin(a) * 5);
+      ctx.fillStyle = 'rgba(255,255,255,0.78)';
+      ctx.fillRect(gx - 2, gy - 2, 5, 4); ctx.fillRect(gx - 1, gy - 3, 3, 1); ctx.fillRect(gx - 2, gy + 2, 1, 1); ctx.fillRect(gx, gy + 2, 1, 1); ctx.fillRect(gx + 2, gy + 2, 1, 1);
+      ctx.fillStyle = 'rgba(30,34,60,.7)'; ctx.fillRect(gx - 1, gy - 1, 1, 1); ctx.fillRect(gx + 1, gy - 1, 1, 1);
     }
-    if (k === 'buried') for (let i = 0; i < 16; i++) { const x = 6 + ((i * 17) % 44), y = 42 - Math.floor(i / 3) * 4 - (i % 2) * 2; ctx.fillStyle = ['#a3b5e8', '#f7c6a3', '#c6e7b8', '#f3b7cc'][i % 4]; ctx.fillRect(x, y - 4, 13, 4); }
-    if (eating) for (let i = 0; i < 6; i++) { ctx.fillStyle = '#ffcf5c'; ctx.fillRect(20 + ((i * 7 + Math.floor(t / 50)) % 24), (t / 12 + i * 9) % 30, 2, 2); }
+    if (k === 'buried') for (let i = 0; i < 18; i++) { const x = 8 + ((i * 23) % (W - 22)), y = H - 4 - Math.floor(i / 4) * 4 - (i % 2) * 2; ctx.fillStyle = ['#b7c4ea', '#f3d0b5', '#cfe6c4', '#efc4d4'][i % 4]; ctx.fillRect(x, y - 4, 13, 4); }
+    if (eating) for (let i = 0; i < 6; i++) { ctx.fillStyle = 'rgba(240,180,76,.9)'; ctx.fillRect(mid - 12 + ((i * 7 + Math.floor(t / 50)) % 24), (t / 12 + i * 9) % (petY - 6), 2, 2); }
     if (reduced) setTimeout(() => requestAnimationFrame(frame), 500); else requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
@@ -278,7 +298,7 @@ function renderPets() {
   }).join(''));
   document.querySelectorAll('[data-pc]').forEach((c) => {
     const x = S.pets.find((y) => y.uid === c.dataset.pc);
-    drawScene(c.getContext('2d'), { pet: petById(x.petId), shiny: x.shiny, stage: stageOf(x).key, face: 'happy' });
+    drawScene(c.getContext('2d'), { pet: petById(x.petId), shiny: x.shiny, stage: stageOf(x).key, face: 'happy', bg: false });
   });
   document.querySelectorAll('[data-uid]').forEach((b) => (b.onclick = async () => {
     await save({ activeUid: b.dataset.uid });

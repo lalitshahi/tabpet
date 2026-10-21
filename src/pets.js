@@ -133,8 +133,18 @@ export function drawEgg(ctx, type, cx, cy, wobble = 0, cracked = false) {
 }
 
 /** The LCD scene used in the popup and on cards: background, ground, pet. */
-export function drawScene(ctx, { pet, shiny, stage, face, night = false, eating = false, bob = 0 }) {
-  ctx.clearRect(0, 0, 64, 48);
+export function drawScene(ctx, { pet, shiny, stage, face, night = false, eating = false, bob = 0, bg = true }) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  if (!bg) {
+    // Transparent: the page paints the sky behind the pet. A soft shadow grounds it.
+    // The pet stands two-thirds down whatever canvas it is given, with room for sky above.
+    const W = ctx.canvas.width, H = ctx.canvas.height;
+    const cx = Math.round(W / 2), cy = Math.round(H * 0.64);
+    ctx.fillStyle = 'rgba(20, 24, 48, 0.07)';
+    ctx.fillRect(cx - 8, cy + 11, 16, 1); ctx.fillRect(cx - 10, cy + 12, 20, 1); ctx.fillRect(cx - 7, cy + 13, 14, 1);
+    if (pet) drawPet(ctx, pet, { cx, cy: cy + bob, face, stage, shiny, eating });
+    return;
+  }
   ctx.fillStyle = night ? '#2c3352' : '#e4f2de';
   ctx.fillRect(0, 0, 64, 48);
   ctx.fillStyle = night ? '#4b5580' : '#c3dbb6';

@@ -11,21 +11,24 @@
   <main id="app">
     <!-- 1. Pick an egg -->
     <section id="v-egg" class="stack" hidden>
-      <h1>Pick an egg</h1>
-      <p class="muted">You choose the vibe. What hatches is a surprise.</p>
+      <header class="intro">
+        <h1>Pick an egg</h1>
+        <p class="muted">You choose the vibe. What hatches is a surprise.</p>
+      </header>
       <div class="eggs" id="eggs"></div>
       <p class="muted small">Every pet is cute or fantasy. No lizards, snakes or bugs.</p>
     </section>
 
     <!-- 2. Hatching and reveal -->
     <section id="v-reveal" class="stack" hidden>
-      <div class="lcd-wrap"><canvas id="reveal-lcd" width="64" height="48" role="img" aria-label="Your new pet"></canvas></div>
-      <h1 id="reveal-title">Hatching…</h1>
+      <div class="world" data-world><span class="stars"></span><canvas id="reveal-lcd" width="64" height="48" role="img" aria-label="Your new pet"></canvas></div>
+      <header class="intro">
+        <h1 id="reveal-title">Hatching…</h1>
+      </header>
       <div id="reveal-body" class="stack" hidden>
         <div class="row" id="reveal-pills"></div>
-        <label class="small muted" for="pet-name">Name</label>
-        <input type="text" id="pet-name" maxlength="16" autocomplete="off">
-        <div class="row">
+        <label class="field"><span>Name</span><input type="text" id="pet-name" maxlength="16" autocomplete="off"></label>
+        <div class="actions">
           <button class="primary" id="keep">Keep</button>
           <button id="rehatch">Not my vibe, re-hatch once</button>
         </div>
@@ -34,57 +37,67 @@
 
     <!-- 3. Tab autopsy -->
     <section id="v-autopsy" class="stack" hidden>
-      <h1>Tab autopsy</h1>
-      <p class="muted" id="autopsy-lead"></p>
+      <header class="intro">
+        <h1>Tab autopsy</h1>
+        <p class="muted" id="autopsy-lead"></p>
+      </header>
       <dl class="stats" id="autopsy-stats"></dl>
-      <div class="persona"><span class="muted">You are</span><b id="persona-name"></b><span class="muted" id="persona-line"></span></div>
-      <button class="feed" id="eat-first"></button>
-      <p class="muted small">Pinned, playing and grouped tabs are never eaten. Every tab stays in the belly, so you can bring it back. Your browser will ask to let Tab Pet see tab titles; nothing leaves your computer.</p>
+      <div class="persona"><span class="muted small">You are</span><b id="persona-name"></b><span class="muted" id="persona-line"></span></div>
+      <button class="feed big" id="eat-first"></button>
+      <p class="muted small">Pinned, playing and grouped tabs are never eaten, and every tab stays in the belly so you can bring it back. Your browser will ask to let Tab Pet see tab titles; nothing leaves your computer.</p>
       <button class="link" id="skip-first">Not now</button>
     </section>
 
     <!-- 4. First meal result -->
     <section id="v-result" class="stack" hidden>
-      <div class="lcd-wrap"><canvas id="result-lcd" width="64" height="48" role="img" aria-label="Your pet, happy"></canvas></div>
-      <h1 id="result-title"></h1>
-      <p class="big" id="result-big"></p>
-      <p class="muted" id="result-note"></p>
-      <button class="primary" id="auto-on"></button>
+      <div class="world" data-world><span class="stars"></span><canvas id="result-lcd" width="64" height="48" role="img" aria-label="Your pet, happy"></canvas></div>
+      <header class="intro">
+        <h1 id="result-title"></h1>
+        <p class="big" id="result-big"></p>
+        <p class="muted" id="result-note"></p>
+      </header>
+      <button class="primary big" id="auto-on"></button>
       <button class="link" id="result-done">Maybe later</button>
     </section>
 
     <!-- Main -->
-    <section id="v-main" class="stack" hidden>
-      <div class="device">
-        <div class="brandline"><span id="m-name"></span><small id="m-mood"></small></div>
-        <div class="screen">
-          <div class="lcd"><canvas id="lcd" width="64" height="48" role="img" aria-label="Your pet"></canvas></div>
-          <div class="status"><span id="m-hp"></span><span id="m-count"></span></div>
+    <section id="v-main" class="main" hidden>
+      <div class="world scene" data-world>
+        <span class="stars"></span>
+        <canvas id="lcd" width="96" height="64" role="img" aria-label="Your pet"></canvas>
+        <div class="scene-top">
+          <span class="tag"><b id="m-name"></b><i id="m-mood"></i></span>
+          <span class="tag count" id="m-count"></span>
         </div>
-        <p class="bubble" id="m-bubble" aria-live="polite"></p>
+        <span id="m-hp" hidden></span>
       </div>
+      <p class="say" id="m-bubble" aria-live="polite"></p>
+
       <div class="grow">
-        <div class="grow-head"><span id="m-stage"></span><span class="muted small" id="m-xp"></span></div>
+        <div class="grow-head"><span id="m-stage"></span><span id="m-xp"></span></div>
         <div class="bar"><i id="m-bar"></i></div>
       </div>
+
       <dl class="stats" id="m-stats"></dl>
-      <div class="row">
-        <button class="feed" id="m-ghosts"></button>
-        <button class="feed" id="m-dups" hidden></button>
+
+      <div class="actions">
+        <button class="feed big" id="m-ghosts"></button>
+        <button class="big" id="m-dups" hidden></button>
       </div>
-      <nav class="row nav">
-        <button id="to-belly">Belly</button>
-        <button id="to-share">Share</button>
-        <button id="to-pets">Pets<span class="dot" id="egg-dot" hidden></span></button>
-        <button id="to-settings">Settings</button>
+
+      <nav class="dock" aria-label="More">
+        <button id="to-belly"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5C4 6 6 4 8.5 4h7C18 4 20 6 20 8.5v7c0 2.5-2 4.5-4.5 4.5h-7C6 20 4 18 4 15.5z"/><path d="M8 12.5c1 1.4 2.4 2 4 2s3-.6 4-2"/></svg><span>Belly</span></button>
+        <button id="to-share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M5 13v4.5A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5V13"/></svg><span>Share</span></button>
+        <button id="to-pets"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="13.5" rx="6.5" ry="7.5"/><path d="M9.5 7.5 12 10l2.5-2.5"/></svg><span>Pets</span><span class="dot" id="egg-dot" hidden></span></button>
+        <button id="to-settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span>Settings</span></button>
       </nav>
     </section>
 
     <!-- Pets -->
     <section id="v-pets" class="stack" hidden>
-      <div class="head"><button class="link" data-back>← Back</button><h2>Your pets</h2></div>
+      <div class="head"><button class="link back" data-back aria-label="Back">←</button><h2>Your pets</h2></div>
       <div id="new-egg" class="callout" hidden>
-        <b>You earned a new egg!</b>
+        <b>You earned a new egg</b>
         <span class="muted small">One for every 100 tabs eaten or 7 tidy days.</span>
         <button class="primary" id="hatch-new">Pick an egg</button>
       </div>
@@ -94,32 +107,34 @@
 
     <!-- Share -->
     <section id="v-share" class="stack" hidden>
-      <div class="head"><button class="link" data-back>← Back</button><h2>Share</h2></div>
-      <div class="row seg" role="group" aria-label="Card">
+      <div class="head"><button class="link back" data-back aria-label="Back">←</button><h2>Share</h2></div>
+      <div class="seg" role="group" aria-label="Card">
         <button id="card-week" aria-pressed="true">This week</button>
         <button id="card-persona" aria-pressed="false">Personality</button>
       </div>
       <canvas id="card" class="card" width="1200" height="630" role="img" aria-label="Share card"></canvas>
-      <div class="row">
+      <div class="actions">
         <button class="primary" id="copy">Copy image</button>
-        <button id="download">Download PNG</button>
-        <span class="muted small" id="share-msg" aria-live="polite"></span>
+        <button id="download">Download</button>
       </div>
+      <p class="muted small" id="share-msg" aria-live="polite"></p>
     </section>
 
     <!-- Settings -->
     <section id="v-settings" class="stack" hidden>
-      <div class="head"><button class="link" data-back>← Back</button><h2>Settings</h2></div>
-      <label class="field"><span>A tab becomes a ghost after</span>
-        <select id="s-ghost"><option value="1">1 day</option><option value="3">3 days</option><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option></select>
-      </label>
-      <label class="check"><input type="checkbox" id="s-auto"> <span>Autopilot: eat ghost tabs every hour, like Arc's auto-archive</span></label>
-      <label class="field"><span>A tidy day means, on average, at most</span>
-        <select id="s-goal"><option value="10">10 tabs</option><option value="20">20 tabs</option><option value="30">30 tabs</option><option value="50">50 tabs</option></select>
-      </label>
-      <div class="danger">
+      <div class="head"><button class="link back" data-back aria-label="Back">←</button><h2>Settings</h2></div>
+      <div class="group">
+        <label class="field"><span>A tab becomes forgotten after</span>
+          <select id="s-ghost"><option value="1">1 day</option><option value="3">3 days</option><option value="7">7 days</option><option value="14">14 days</option><option value="30">30 days</option></select>
+        </label>
+        <label class="check"><input type="checkbox" id="s-auto"> <span><b>Autopilot</b><br><span class="muted small">Eat forgotten tabs every hour, like Arc’s auto-archive</span></span></label>
+        <label class="field"><span>A tidy day means, on average, at most</span>
+          <select id="s-goal"><option value="10">10 tabs</option><option value="20">20 tabs</option><option value="30">30 tabs</option><option value="50">50 tabs</option></select>
+        </label>
+      </div>
+      <div class="group">
         <b>Tab bankruptcy</b>
-        <span class="muted small">Eat every tab except pinned, playing, grouped and the ones you're looking at. All saved in the belly.</span>
+        <span class="muted small">Eat every tab except pinned, playing, grouped and the ones you’re looking at. All saved in the belly.</span>
         <button id="bankrupt">Declare bankruptcy</button>
       </div>
       <p class="muted small">Everything stays in this browser. No account, no server, no tracking.</p>
