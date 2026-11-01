@@ -95,7 +95,8 @@ function tile(item, { showWhen = false } = {}) {
 function renderHeader() {
   const meals = groupMeals(S.belly, S.log);
   const name = pet ? pet.name : 'Your pet';
-  $('title').textContent = `${name}’s belly`;
+  const hl = el('span', { class: 'hl' }, 'belly');
+  $('title').replaceChildren(`${name}’s `, hl);
   document.title = `${name}’s belly · Tab Pet`;
   const mb = S.totals.mb || 0;
   $('sub').textContent = S.belly.length

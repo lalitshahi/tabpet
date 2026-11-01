@@ -35,6 +35,10 @@
   --radius: 18px;
   /* pastel tab colours */
   --p1: #f7c9b6; --p2: #c9e4d4; --p3: #d9d6f5; --p4: #f6dfa0; --p5: #cfe6f2;
+  /* bold tile colours, same as the landing page bento */
+  --t1: #ffb48a; --t2: #f9d77a; --t3: #c9b2f4; --t4: #8edcb3;
+  /* hand-drawn underline */
+  --uline: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 18' preserveAspectRatio='none'%3E%3Cpath d='M3 12 C 90 4, 200 16, 397 7' fill='none' stroke='%232e7d5b' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E");
   /* names kept for older stylesheets */
   --shell: var(--accent-soft);
   --shell-dark: var(--accent);
@@ -62,6 +66,7 @@
     --legend: #f0b45a;
     --shadow: 0 1px 0 var(--hair), 0 12px 30px -16px rgba(0, 0, 0, .7);
     --p1: #5a4038; --p2: #34473d; --p3: #3f3d5a; --p4: #554a2c; --p5: #33464f;
+    --uline: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 18' preserveAspectRatio='none'%3E%3Cpath d='M3 12 C 90 4, 200 16, 397 7' fill='none' stroke='%237fd1a8' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E");
   }
 }
 
@@ -99,17 +104,16 @@ input[type="text"], input[type="search"], select {
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .stack { display: grid; gap: 14px; }
 
-/* The pet's world: a soft paper card with a few pastel tabs floating behind the pet. */
-.world {
-  position: relative; overflow: hidden; border-radius: 22px; isolation: isolate;
-  background: radial-gradient(120% 90% at 50% 100%, var(--accent-soft) 0%, transparent 60%), var(--surface);
-  box-shadow: var(--shadow);
-}
+/* The pet's world: no box, like the landing hero. A soft glow, a few pastel tabs floating behind. */
+.world { position: relative; isolation: isolate; border-radius: 22px; }
 .world::before, .world::after {
-  content: ''; position: absolute; z-index: -1; width: 30%; aspect-ratio: 4 / 1; border-radius: 10px 10px 3px 3px; opacity: .55;
+  content: ''; position: absolute; z-index: -1; width: 26%; aspect-ratio: 4 / 1; border-radius: 10px 10px 3px 3px; opacity: .8;
 }
-.world::before { left: 6%; top: 14%; background: var(--p1); rotate: -9deg; }
-.world::after  { right: 6%; top: 22%; background: var(--p5); rotate: 8deg; width: 24%; }
-.world .stars { position: absolute; left: 10%; bottom: 14%; z-index: -1; width: 20%; aspect-ratio: 4 / 1; border-radius: 10px 10px 3px 3px; background: var(--p4); rotate: 6deg; opacity: .5; }
+.world::before { left: 2%; top: 18%; background: var(--p1); rotate: -9deg; }
+.world::after  { right: 3%; top: 30%; background: var(--p5); rotate: 8deg; width: 20%; }
+.world .stars { position: absolute; left: 8%; bottom: 16%; z-index: -1; width: 18%; aspect-ratio: 4 / 1; border-radius: 10px 10px 3px 3px; background: var(--p4); rotate: 6deg; opacity: .8; }
+.world canvas { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; image-rendering: pixelated; filter: drop-shadow(0 14px 14px rgba(25, 25, 22, .12)); }
 .world[data-mood="buried"] { filter: saturate(.8); }
-.world canvas { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; image-rendering: pixelated; }
+
+/* Hand-drawn underline, shared with the landing page */
+.hl { color: var(--accent); background: var(--uline) no-repeat left bottom / 100% .32em; padding-bottom: .14em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }

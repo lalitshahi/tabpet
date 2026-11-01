@@ -116,7 +116,7 @@ function revealDone(record) {
 
 // ---------- Autopsy ----------
 function statsHtml(items) {
-  return items.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  return items.map(([k, v], i) => `<div style="--c:var(--t${(i % 4) + 1})"><dd>${v}</dd><dt>${k}</dt></div>`).join('');
 }
 
 async function renderAutopsy() {
@@ -226,6 +226,12 @@ function renderMain(line) {
   $('m-bar').style.width = `${Math.round(st.progress * 100)}%`;
   setHTML($('m-stats'), statsHtml([['Tabs', tabs.length], ['Forgotten', ghosts], ['Dupes', perm ? dups : '–'], ['Belly', S.belly.length]]));
 
+  const head = $('m-head');
+  head.replaceChildren();
+  const hl = document.createElement('span'); hl.className = 'hl';
+  if (ghosts) { hl.textContent = plural(ghosts, 'forgotten tab'); head.append(hl, ' to snack on'); }
+  else if (S.belly.length) { hl.textContent = 'All tidy.'; head.append(hl, ` ${S.belly.length} kept safe.`); }
+  else { hl.textContent = 'All tidy.'; head.append(hl, ' Nothing to eat.'); }
   const g = $('m-ghosts');
   g.textContent = ghosts ? `Feed ${p.name} ${plural(ghosts, 'forgotten tab')}` : 'Nothing forgotten. Nice.';
   g.disabled = !ghosts;

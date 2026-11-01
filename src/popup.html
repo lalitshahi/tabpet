@@ -62,16 +62,17 @@
 
     <!-- Main -->
     <section id="v-main" class="main" hidden>
-      <div class="world scene" data-world>
+      <header class="mbar">
+        <span class="kicker"><b id="m-name"></b><i id="m-mood"></i></span>
+        <span class="count" id="m-count"></span>
+      </header>
+      <div class="stage scene world" data-world>
         <span class="stars"></span>
         <canvas id="lcd" width="96" height="64" role="img" aria-label="Your pet"></canvas>
-        <div class="scene-top">
-          <span class="tag"><b id="m-name"></b><i id="m-mood"></i></span>
-          <span class="tag count" id="m-count"></span>
-        </div>
+        <p class="bubble" id="m-bubble" aria-live="polite"></p>
         <span id="m-hp" hidden></span>
       </div>
-      <p class="say" id="m-bubble" aria-live="polite"></p>
+      <h1 class="mhead" id="m-head"></h1>
 
       <div class="grow">
         <div class="grow-head"><span id="m-stage"></span><span id="m-xp"></span></div>
