@@ -272,12 +272,12 @@ function startLcd() {
     }
     const g = Math.min(ghostTabs(tabs, Date.now(), ghostMs()).length, 6);
     for (let i = 0; i < g && !night; i++) {
-      // Forgotten tabs drift in the sky above the pet, never across its face.
+      // Forgotten tabs float above the pet as little pastel tabs, never across its face.
       const a = t / 1800 + (i / g) * Math.PI * 2;
-      const gx = Math.round(mid + Math.cos(a) * (W * 0.38)), gy = Math.round(H * 0.24 + Math.sin(a) * 5);
-      ctx.fillStyle = 'rgba(255,255,255,0.78)';
-      ctx.fillRect(gx - 2, gy - 2, 5, 4); ctx.fillRect(gx - 1, gy - 3, 3, 1); ctx.fillRect(gx - 2, gy + 2, 1, 1); ctx.fillRect(gx, gy + 2, 1, 1); ctx.fillRect(gx + 2, gy + 2, 1, 1);
-      ctx.fillStyle = 'rgba(30,34,60,.7)'; ctx.fillRect(gx - 1, gy - 1, 1, 1); ctx.fillRect(gx + 1, gy - 1, 1, 1);
+      const gx = Math.round(mid + Math.cos(a) * (W * 0.38)), gy = Math.round(H * 0.22 + Math.sin(a) * 5);
+      ctx.fillStyle = ['#f2b9a2', '#a9d6bc', '#c2bdf0', '#f0cf78', '#b4d7ea', '#f2b9a2'][i];
+      ctx.fillRect(gx - 4, gy - 1, 9, 3); ctx.fillRect(gx - 3, gy - 2, 7, 1);
+      ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillRect(gx - 2, gy, 1, 1); ctx.fillRect(gx, gy, 3, 1);
     }
     if (k === 'buried') for (let i = 0; i < 18; i++) { const x = 8 + ((i * 23) % (W - 22)), y = H - 4 - Math.floor(i / 4) * 4 - (i % 2) * 2; ctx.fillStyle = ['#b7c4ea', '#f3d0b5', '#cfe6c4', '#efc4d4'][i % 4]; ctx.fillRect(x, y - 4, 13, 4); }
     if (eating) for (let i = 0; i < 6; i++) { ctx.fillStyle = 'rgba(240,180,76,.9)'; ctx.fillRect(mid - 12 + ((i * 7 + Math.floor(t / 50)) % 24), (t / 12 + i * 9) % (petY - 6), 2, 2); }

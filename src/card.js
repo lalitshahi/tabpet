@@ -2,10 +2,10 @@
 import { drawScene, petById } from './pets.js';
 import { formatMemory } from './logic.js';
 
-const FONT = 'Onest, "Onest Variable", system-ui, -apple-system, "Segoe UI", sans-serif';
+const FONT = 'Nunito, "Nunito Variable", ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif';
 const ROUND = FONT;
 const SANS = FONT;
-const INK = '#1d2030', MUTED = '#6b7088', ACCENT = '#3f8467', PAPER = '#f4f5f8';
+const INK = '#191916', MUTED = '#6b6a62', ACCENT = '#2e7d5b', PAPER = '#f5f0e6';
 
 /** The pet in its little world: a soft day sky, two hills, the pet, then name and species. */
 function device(ctx, pet, stage, face) {
@@ -15,14 +15,24 @@ function device(ctx, pet, stage, face) {
   ctx.fillStyle = '#ffffff';
   ctx.beginPath(); ctx.roundRect(x, y, w, h, 36); ctx.fill();
   ctx.restore();
-  // sky
+  // the pet's corner: warm paper, a soft green glow and a few pastel tabs floating behind it
   ctx.save();
   ctx.beginPath(); ctx.roundRect(x, y, w, 380, [36, 36, 0, 0]); ctx.clip();
-  const g = ctx.createLinearGradient(0, y, 0, y + 380);
-  g.addColorStop(0, '#cfe3f3'); g.addColorStop(0.75, '#eef4ec');
+  ctx.fillStyle = '#fffdf8'; ctx.fillRect(x, y, w, 380);
+  const g = ctx.createRadialGradient(x + w / 2, y + 380, 10, x + w / 2, y + 380, 300);
+  g.addColorStop(0, 'rgba(46,125,91,0.20)'); g.addColorStop(1, 'rgba(46,125,91,0)');
   ctx.fillStyle = g; ctx.fillRect(x, y, w, 380);
-  ctx.fillStyle = '#cfe3cf'; ctx.beginPath(); ctx.ellipse(x + 120, y + 420, 260, 110, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#b9d6be'; ctx.beginPath(); ctx.ellipse(x + 360, y + 440, 240, 110, 0, 0, Math.PI * 2); ctx.fill();
+  const tab = (tx, ty, tw, rot, c) => {
+    ctx.save(); ctx.translate(tx, ty); ctx.rotate(rot); ctx.fillStyle = c;
+    ctx.beginPath(); ctx.roundRect(-tw / 2, -tw / 8, tw, tw / 4, [14, 14, 4, 4]); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.beginPath(); ctx.arc(-tw / 2 + tw * 0.14, 0, tw * 0.035, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(-tw / 2 + tw * 0.24, -tw * 0.025, tw * 0.45, tw * 0.05, 4); ctx.fill();
+    ctx.restore();
+  };
+  tab(x + 100, y + 70, 120, -0.16, '#f7c9b6');
+  tab(x + 350, y + 100, 100, 0.14, '#cfe6f2');
+  tab(x + 80, y + 300, 90, 0.1, '#f6dfa0');
+  tab(x + 370, y + 320, 110, -0.12, '#d9d6f5');
   const scene = document.createElement('canvas');
   scene.width = 64; scene.height = 48;
   drawScene(scene.getContext('2d'), { pet: petById(pet.petId), shiny: pet.shiny, stage, face, bg: false });
@@ -30,10 +40,10 @@ function device(ctx, pet, stage, face) {
   ctx.drawImage(scene, 10, 12, 44, 33, x + 70, y + 80, 300, 225);
   ctx.restore();
   // name strip
-  ctx.fillStyle = INK; ctx.font = `650 34px ${FONT}`;
+  ctx.fillStyle = INK; ctx.font = `850 34px ${FONT}`;
   ctx.fillText(pet.name, x + 32, y + 440);
   const p = petById(pet.petId);
-  ctx.fillStyle = MUTED; ctx.font = `500 20px ${FONT}`;
+  ctx.fillStyle = MUTED; ctx.font = `700 20px ${FONT}`;
   ctx.fillText(`${p.species} · ${p.rarity}${pet.shiny ? ' · shiny' : ''}`, x + 32, y + 474);
 }
 
@@ -49,7 +59,7 @@ function wrap(ctx, text, x, y, max, lh) {
 
 function footer(ctx, text) {
   ctx.fillStyle = MUTED;
-  ctx.font = `400 20px ${SANS}`;
+  ctx.font = `650 20px ${SANS}`;
   ctx.fillText(text, 560, 585);
 }
 
@@ -58,15 +68,15 @@ export function drawPersonaCard(canvas, { pet, stage, persona, snap, ghostDays =
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = PAPER; ctx.fillRect(0, 0, 1200, 630);
   device(ctx, pet, stage, 'happy');
-  ctx.fillStyle = MUTED; ctx.font = `500 24px ${SANS}`; ctx.fillText('My tab personality', 560, 130);
-  ctx.fillStyle = INK; ctx.font = `680 64px ${ROUND}`;
+  ctx.fillStyle = MUTED; ctx.font = `700 24px ${SANS}`; ctx.fillText('My tab personality', 560, 130);
+  ctx.fillStyle = INK; ctx.font = `900 64px ${ROUND}`;
   const y = wrap(ctx, persona.name, 560, 205, 580, 70);
-  ctx.fillStyle = ACCENT; ctx.font = `550 30px ${ROUND}`; ctx.fillText(persona.line, 560, Math.max(y + 60, 300));
+  ctx.fillStyle = ACCENT; ctx.font = `800 30px ${ROUND}`; ctx.fillText(persona.line, 560, Math.max(y + 60, 300));
   [['Tabs open', snap.tabs], [`Untouched ${ghostDays}+ day${ghostDays === 1 ? '' : 's'}`, snap.ghosts], ['Oldest tab', `${snap.oldestDays} days`]].forEach(([k, v], i) => {
     const ry = 400 + i * 52;
-    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.roundRect(560, ry - 34, 580, 44, 12); ctx.fill();
-    ctx.fillStyle = MUTED; ctx.font = `400 22px ${SANS}`; ctx.fillText(k, 580, ry - 4);
-    ctx.fillStyle = INK; ctx.font = `650 26px ${ROUND}`; ctx.textAlign = 'right'; ctx.fillText(String(v), 1120, ry - 3); ctx.textAlign = 'left';
+    ctx.fillStyle = '#fffdf8'; ctx.beginPath(); ctx.roundRect(560, ry - 34, 580, 44, 12); ctx.fill();
+    ctx.fillStyle = MUTED; ctx.font = `650 22px ${SANS}`; ctx.fillText(k, 580, ry - 4);
+    ctx.fillStyle = INK; ctx.font = `850 26px ${ROUND}`; ctx.textAlign = 'right'; ctx.fillText(String(v), 1120, ry - 3); ctx.textAlign = 'left';
   });
   footer(ctx, 'What’s yours? Tab Pet · free for every browser');
   return canvas;
@@ -77,14 +87,14 @@ export function drawWeekCard(canvas, { pet, stage, week, peak }) {
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = PAPER; ctx.fillRect(0, 0, 1200, 630);
   device(ctx, pet, stage, week.eaten ? 'happy' : 'dot');
-  ctx.fillStyle = MUTED; ctx.font = `500 24px ${SANS}`; ctx.fillText('This week', 560, 130);
-  ctx.fillStyle = INK; ctx.font = `680 60px ${ROUND}`;
+  ctx.fillStyle = MUTED; ctx.font = `700 24px ${SANS}`; ctx.fillText('This week', 560, 130);
+  ctx.fillStyle = INK; ctx.font = `900 60px ${ROUND}`;
   wrap(ctx, `${pet.name} ate ${week.eaten} tab${week.eaten === 1 ? '' : 's'}`, 560, 205, 590, 66);
   if (week.mb >= 50) {
-    ctx.fillStyle = ACCENT; ctx.font = `680 56px ${ROUND}`;
+    ctx.fillStyle = ACCENT; ctx.font = `900 56px ${ROUND}`;
     ctx.fillText(`about ${formatMemory(week.mb)} back`, 560, 360);
   }
-  ctx.fillStyle = MUTED; ctx.font = `400 24px ${SANS}`;
+  ctx.fillStyle = MUTED; ctx.font = `650 24px ${SANS}`;
   ctx.fillText(`${week.ghosts} forgotten · ${week.dups} duplicates · ${peak} tabs open now`, 560, 420);
   ctx.fillText('Nothing lost: every tab is saved in its belly.', 560, 460);
   footer(ctx, 'Get a tab pet · free for every browser');

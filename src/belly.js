@@ -86,7 +86,9 @@ function tile(item, { showWhen = false } = {}) {
     el('button', { type: 'button', title: 'Copy link', onclick: (e) => { e.stopPropagation(); navigator.clipboard.writeText(item.url).then(() => toast('Link copied.')); } }, 'Copy link'),
     el('button', { type: 'button', title: 'Forget this tab for good', onclick: (e) => { e.stopPropagation(); forget([item]); } }, 'Forget'),
   );
-  return el('article', { class: 'tile', 'data-uid': item.uid }, main, acts);
+  const h = hostOf(item.url) || item.url;
+  let n = 0; for (const ch of h) n = (n * 31 + ch.charCodeAt(0)) >>> 0;
+  return el('article', { class: 'tile', 'data-uid': item.uid, style: `--c: var(--p${(n % 5) + 1})` }, main, acts);
 }
 
 // ---------- Render ----------
