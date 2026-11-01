@@ -13,8 +13,10 @@ Everything you paste into the stores (name, summary, description, permission rea
 
 You need, once, for every store:
 
-- **Homepage:** https://indiecoderlab.vercel.app/tab-pet
-- **Privacy policy:** https://indiecoderlab.vercel.app/tab-pet-privacy
+- **Homepage:** https://indiecoderlab.com/tab-pet
+- **Privacy policy:** https://indiecoderlab.com/tab-pet-privacy
+- **Terms of use:** https://indiecoderlab.com/tab-pet-terms
+- **Contact email:** hello@indiecoderlab.com
 - **Support:** https://github.com/lalitshahi/tabpet/issues
 - **Icon:** `icons/icon-128.png`
 - **Screenshots:** 1280×800 PNGs (popup, belly, share card). Take them from the real extension once it's loaded.

@@ -1,6 +1,6 @@
 # Tab Pet
 
-**Website:** https://indiecoderlab.vercel.app/tab-pet · **Privacy:** https://indiecoderlab.vercel.app/tab-pet-privacy
+**Website:** https://indiecoderlab.com/tab-pet · **Privacy:** https://indiecoderlab.com/tab-pet-privacy · **Terms:** https://indiecoderlab.com/tab-pet-terms
 
 A tiny pet in your toolbar that eats the tabs you forgot. It saves every one in its belly, so nothing is lost, and shows how much memory you got back. Arc-style auto-archive for every browser.
 
