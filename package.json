@@ -8,5 +8,12 @@
     "icons": "node scripts/icons.mjs",
     "build": "node scripts/build.mjs",
     "zip": "node scripts/build.mjs --zip"
+  },
+  "license": "AGPL-3.0-only",
+  "description": "A tiny pet that eats your forgotten tabs. Browser extension for Chrome, Edge, Firefox, Opera and Safari.",
+  "homepage": "https://indiecoderlab.vercel.app/tab-pet",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lalitshahi/tab-pet.git"
   }
 }

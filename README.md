@@ -1,5 +1,7 @@
 # Tab Pet
 
+**Website:** https://indiecoderlab.vercel.app/tab-pet · **Privacy:** https://indiecoderlab.vercel.app/tab-pet-privacy
+
 A tiny pet in your toolbar that eats the tabs you forgot. It saves every one in its belly, so nothing is lost, and shows how much memory you got back. Arc-style auto-archive for every browser.
 
 - **Hatch:** pick one of three eggs (Cozy, Spooky-cute, Mythic) and get one of 24 cute or fantasy pets. Rarity is 70% common, 25% rare, 5% legendary. Any pet can be shiny (1 in 50). You get one free re-hatch in the first day.
@@ -51,12 +53,18 @@ npm run zip       # also the store uploads: dist/tab-pet-<browser>-<version>.zip
 | `src/card.js` | The two share cards |
 | `manifest.base.json` + `scripts/build.mjs` | Per-browser manifests |
 
-## Publishing checklist
+## Publishing
 
-- [ ] Chrome Web Store developer account (one-time $5): upload `dist/tab-pet-chromium-<v>.zip`
-- [ ] Edge Add-ons (free, Microsoft Partner Center): same zip
-- [ ] Opera Add-ons (free): same zip
-- [ ] Firefox Add-ons (free): upload `dist/tab-pet-firefox-<v>.zip`; source upload not needed (no minified code)
-- [ ] Safari: run the converter on a Mac, sign with the Apple Developer account, submit to the App Store
-- [ ] Listing copy, permission notes and screenshots: `STORE.md`
-- [ ] Privacy policy URL: `https://<lab domain>/tab-pet-privacy`
+Step by step for every store, with the listing copy in [`STORE.md`](STORE.md): see [`PUBLISHING.md`](PUBLISHING.md).
+
+## Contributing
+
+Issues and pull requests are welcome. By sending a pull request you agree that your contribution can be released under the same licence, and that the maintainer may also offer it under other terms (this keeps the store builds possible). If you add a pet, keep it cute or fantasy, 64×48 pixel art, drawn in code in `src/pets.js`.
+
+## Licence
+
+Code: [GNU AGPL v3.0](LICENSE). You can use, change and share it; if you share a changed version, or run it for others, share your source under the same licence.
+
+Font: Nunito, under the SIL Open Font Licence ([`src/fonts/OFL.txt`](src/fonts/OFL.txt)).
+
+"Tab Pet" and the Tab Pet pet characters as a brand are not covered by the code licence. Forks are welcome under a different name.
