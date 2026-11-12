@@ -33,9 +33,16 @@ Private by design:
 • At install it only sees how many tabs you have and when you last used them
 • It asks before it reads tab titles, and only so it can remember what it ate
 
-Free. Built in public by one developer.
+Free and open source (AGPL-3.0): github.com/lalitshahi/tabpet. Built in public by one developer.
 
-**Screenshots (1280×800):** egg picker, hatch reveal (rare pet), tab autopsy, "ate 52 tabs, 1.9 GB back", belly search, share card.
+**Images (ready in [`store/`](store/)):**
+- Screenshots, 1280×800: `screenshot-1.png` (hatch) … `screenshot-5.png` (all tidy, share). Upload in order.
+- Chrome small promo tile, 440×280: `promo-small-440x280.png`
+- Chrome marquee, 1400×560 (optional): `promo-marquee-1400x560.png`
+- Edge store logo, 300×300: `logo-300.png`
+- Icon, 128×128: `icons/icon-128.png`
+
+**Links:** homepage https://indiecoderlab.com/tab-pet · privacy https://indiecoderlab.com/tab-pet-privacy · terms https://indiecoderlab.com/tab-pet-terms · support https://github.com/lalitshahi/tabpet/issues · email hello@indiecoderlab.com
 
 **Single purpose (for review):** Closes tabs the user hasn't used recently and keeps a searchable list so they can be reopened, presented as a virtual pet.
 
@@ -44,6 +51,7 @@ Free. Built in public by one developer.
 - `alarms`: an hourly check for tidy days and, if you turn it on, autopilot.
 - `system.memory` (Chromium only): reads free memory before and after eating to show the memory you got back. No warning is shown for this permission.
 - `tabs` (optional, requested when you first feed your pet): reads tab titles and links so eaten tabs can be listed, searched and reopened, and so duplicates can be found.
+- `favicon` (Chromium only): shows site icons in the belly from the browser's own local icon cache. It never contacts a website.
 
 **Data usage disclosure:** Does not collect or transmit any user data. Tab titles and links are stored locally and never leave the device.
 
