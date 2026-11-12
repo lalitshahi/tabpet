@@ -1,0 +1,328 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: Nunito; src: url(nunito.woff2) format('woff2'); font-weight: 200 1000; }
+  html, body { margin: 0; background: #f5f0e6; }
+  canvas { display: block; }
+</style>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script type="module">
+import { PETS, drawScene, drawEgg } from './pets.js';
+
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const W = 1920, H = 1080;
+const PAPER = '#f5f0e6', SURF = '#fffdf8', INK = '#191916', MUTED = '#5f5f58', LINE = '#e4ddcf', ACC = '#28704f', CHROME = '#ece6da';
+const F = (w, s) => `${w} ${s}px Nunito, sans-serif`;
+const MOCHI = PETS[0];
+
+// ---------- easing / helpers ----------
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const eOut = (x) => 1 - Math.pow(1 - x, 3);
+const eInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const eBack = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const lerp = (a, b, x) => a + (b - a) * x;
+
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function text(s, x, y, font, color, align = 'left', alpha = 1) {
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'alphabetic'; ctx.fillText(s, x, y); ctx.restore();
+}
+function shadow(blur = 40, y = 18, a = 0.16) { ctx.shadowColor = `rgba(40,34,20,${a})`; ctx.shadowBlur = blur; ctx.shadowOffsetY = y; }
+function noShadow() { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; }
+
+// Pet: drawn into a tiny canvas, then scaled up with crisp pixels.
+const petCv = document.createElement('canvas'); petCv.width = 64; petCv.height = 48;
+const petCtx = petCv.getContext('2d');
+function pet(cx, cy, scale, { face = 'dot', eating = false, bob = 0, stage = 'grown', alpha = 1 } = {}) {
+  drawScene(petCtx, { pet: MOCHI, shiny: false, stage, face, eating, bob, bg: false });
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.imageSmoothingEnabled = false;
+  // the pet stands at (32, ~31) in the 64x48 canvas
+  ctx.drawImage(petCv, cx - 32 * scale, cy - 31 * scale, 64 * scale, 48 * scale);
+  ctx.restore();
+}
+const eggCv = document.createElement('canvas'); eggCv.width = 24; eggCv.height = 28;
+function egg(cx, cy, scale, wobble, cracked) {
+  const e = eggCv.getContext('2d'); e.clearRect(0, 0, 24, 28); drawEgg(e, 'cozy', 12, 14, wobble, cracked);
+  ctx.save(); ctx.imageSmoothingEnabled = false; ctx.drawImage(eggCv, cx - 12 * scale, cy - 14 * scale, 24 * scale, 28 * scale); ctx.restore();
+}
+
+// Hand-drawn underline, like the landing page.
+function underline(x, y, w, p, color = ACC) {
+  if (p <= 0) return;
+  ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 9; ctx.lineCap = 'round';
+  ctx.beginPath();
+  const n = 40, sx = x, ex = x + w * p;
+  for (let i = 0; i <= n; i++) {
+    const u = i / n, X = lerp(sx, ex, u), U = (X - x) / w;
+    const Y = y + 6 - 7 * Math.sin(U * Math.PI * 0.95) + 3 * U; // gentle curve, like the SVG swoosh
+    i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+  }
+  ctx.stroke(); ctx.restore();
+}
+
+// Headline: plain words + green words, centred, with an optional underline under the green part.
+function headline(plain, green, y, alpha = 1, size = 92, ul = 1) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.font = F(900, size);
+  const wp = ctx.measureText(plain).width, wg = ctx.measureText(green).width;
+  const x0 = W / 2 - (wp + wg) / 2;
+  ctx.fillStyle = INK; ctx.textBaseline = 'alphabetic'; ctx.fillText(plain, x0, y);
+  ctx.fillStyle = ACC; ctx.fillText(green, x0 + wp, y);
+  ctx.restore();
+  ctx.save(); ctx.globalAlpha = alpha; underline(x0 + wp + 4, y + 22, wg - 8, ul); ctx.restore();
+}
+
+// Floating pastel tabs in the background, like the landing hero.
+const BG_TABS = [
+  { x: 120, y: 150, w: 210, r: -0.16, c: '#f7c9b6' }, { x: 1640, y: 120, w: 190, r: 0.14, c: '#cfe6f2' },
+  { x: 80, y: 860, w: 170, r: 0.1, c: '#f6dfa0' }, { x: 1690, y: 880, w: 220, r: -0.12, c: '#d9d6f5' },
+  { x: 1780, y: 520, w: 140, r: 0.18, c: '#c9e4d4' }, { x: 40, y: 520, w: 150, r: -0.08, c: '#f7c9b6' },
+];
+function pastelTab(x, y, w, rot, c, alpha = 1) {
+  const h = w / 4;
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.translate(x, y); ctx.rotate(rot);
+  ctx.fillStyle = c; rr(-w / 2, -h / 2, w, h, [16, 16, 5, 5]); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.arc(-w / 2 + w * 0.15, 0, w * 0.04, 0, Math.PI * 2); ctx.fill();
+  rr(-w / 2 + w * 0.26, -w * 0.025, w * 0.45, w * 0.05, 4); ctx.fill();
+  ctx.restore();
+}
+function background(t, alpha = 1) {
+  ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, H);
+  BG_TABS.forEach((b, i) => pastelTab(b.x, b.y + Math.sin(t * 0.9 + i) * 10, b.w, b.r, b.c, 0.75 * alpha));
+}
+
+// ---------- the browser ----------
+const SITES = [
+  ['Gmail', '#ea4335', 'Inbox (12)', true], ['Calendar', '#1a73e8', 'Week 46', true],
+  ['GitHub', '#24292f', 'Fix flaky checkout test'], ['Booking', '#0f766e', 'Hoshinoya Kyoto ryokan'],
+  ['Stripe', '#635bff', 'Webhooks · Stripe Docs'], ['YouTube', '#ef4444', 'lofi beats to code to', true],
+  ['Notion', '#374151', 'Q4 roadmap'], ['Sheets', '#16a34a', 'Budget 2027'], ['Flights', '#0891b2', 'Flights to Tokyo'],
+  ['Reddit', '#ff4500', 'How do you manage 100 tabs?'], ['MDN', '#1e293b', 'Intl.DateTimeFormat'], ['Figma', '#a259ff', 'Dashboard v3'],
+  ['Linear', '#5e6ad2', 'WEB-1193 Onboarding v2'], ['Medium', '#111827', 'How we cut our bundle'], ['NYT', '#d97706', 'Weeknight ramen'],
+  ['Tailwind', '#06b6d4', 'grid-template-columns'], ['HN', '#ff6600', 'Show HN: a menu bar app'], ['Amazon', '#f59e0b', 'Mechanical keyboard'],
+  ['Postgres', '#336791', 'Using EXPLAIN'], ['Wikipedia', '#334155', 'Red panda'], ['Linear', '#5e6ad2', 'WEB-1193 Onboarding v2'],
+  ['React', '#0ea5e9', 'useEffect – React'], ['Maps', '#16a34a', 'Coffee near Shibuya'], ['npm', '#cb3837', 'zod'],
+  ['X', '#111827', 'Shipping every day'], ['Docs', '#2563eb', 'Sprint notes'], ['Apple', '#6b7280', 'MacBook Air 15"'],
+  ['Vercel', '#111827', 'Deployments'], ['Airbnb', '#ff5a5f', 'Kyoto · Homes'], ['Dribbble', '#ea4c89', 'Onboarding shots'],
+  ['Spotify', '#1db954', 'Focus playlist'], ['Docs', '#2563eb', 'Launch checklist'], ['Claude', '#c96442', 'Planning the launch', true],
+];
+const N = SITES.length;
+const KEPT = new Set(SITES.map((s, i) => (s[3] ? i : -1)).filter((i) => i >= 0));
+const EATEN = SITES.map((_, i) => i).filter((i) => !KEPT.has(i));
+
+// Browser window at (x,y,w,h). n tabs visible; gone[i] in 0..1 hides a tab; ghost in 0..1 greys forgotten tabs.
+function browser(x, y, w, h, { n = N, gone = () => 0, ghost = 0, active = N - 1, highlight = -1, hiP = 0, alpha = 1 } = {}) {
+  ctx.save(); ctx.globalAlpha = alpha;
+  shadow(60, 30, 0.18); ctx.fillStyle = SURF; rr(x, y, w, h, 26); ctx.fill(); noShadow();
+  ctx.save(); rr(x, y, w, h, 26); ctx.clip();
+  ctx.fillStyle = CHROME; ctx.fillRect(x, y, w, 92);
+  // traffic lights
+  ['#e6c2b6', '#ead9a8', '#c4dcc9'].forEach((c, i) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x + 34 + i * 26, y + 30, 8, 0, Math.PI * 2); ctx.fill(); });
+  // tabs
+  const left = x + 24, right = x + w - 24, stripW = right - left, ty = y + 44, th = 48;
+  const vis = []; for (let i = 0; i < n; i++) { const g = gone(i); if (g < 1) vis.push([i, 1 - g]); }
+  const total = vis.reduce((s, [i, k]) => s + (SITES[i][3] && i !== active ? 0.28 : 1) * k, 0);
+  const unit = Math.min(270, stripW / Math.max(1, total));
+  let cx = left;
+  for (const [i, k] of vis) {
+    const pinned = SITES[i][3] && i !== active;
+    const tw = (pinned ? 52 : unit) * k;
+    if (tw < 2) continue;
+    const isGhost = !KEPT.has(i) ? ghost : 0;
+    ctx.save();
+    ctx.globalAlpha *= (1 - 0.45 * isGhost) * clamp(k * 1.4);
+    ctx.fillStyle = i === active ? SURF : i === highlight ? `rgba(255,216,74,${0.35 + 0.65 * hiP})` : '#f7f3ea';
+    rr(cx + 2, ty, tw - 4, th, [12, 12, 0, 0]); ctx.fill();
+    ctx.beginPath(); rr(cx + 2, ty, tw - 4, th, [12, 12, 0, 0]); ctx.clip();
+    const fx = tw > 70 ? cx + 16 : cx + tw / 2 - 10;
+    ctx.filter = isGhost ? `grayscale(${isGhost})` : 'none';
+    ctx.fillStyle = SITES[i][1]; rr(fx, ty + 12, 24, 24, 6); ctx.fill();
+    ctx.filter = 'none';
+    text(SITES[i][0][0], fx + 12, ty + 30, F(900, 15), '#fff', 'center');
+    if (tw > 80) text(SITES[i][2], fx + 34, ty + 31, F(800, 20), isGhost ? '#9a978e' : INK);
+    ctx.restore();
+    cx += tw;
+  }
+  // page body
+  ctx.fillStyle = SURF; ctx.fillRect(x, y + 92, w, h - 92);
+  ctx.fillStyle = '#f2ede2'; rr(x + 30, y + 112, w - 60, 40, 20); ctx.fill();
+  text(SITES[active][2], x + 56, y + 139, F(700, 18), MUTED);
+  ctx.fillStyle = 'rgba(25,25,22,.07)';
+  [[0.62, 170], [0.84, 210], [0.7, 240], [0.48, 270]].forEach(([f, yy]) => { rr(x + 60, y + yy + 20, (w - 120) * f, 14, 7); ctx.fill(); });
+  ctx.restore(); ctx.restore();
+  return { tabCenter: (i) => { // center of tab i for flying-tab animations
+    let cx2 = left; for (const [j, k] of vis) { const pinned = SITES[j][3] && j !== active; const tw = (pinned ? 52 : unit) * k; if (j === i) return [cx2 + tw / 2, ty + th / 2, tw]; cx2 += tw; } return [left, ty, unit]; } };
+}
+
+// A tab card flying (title card like the landing story)
+function tabCard(i, x, y, scale, rot, alpha) {
+  if (alpha <= 0 || scale <= 0.01) return;
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.translate(x, y); ctx.rotate(rot); ctx.scale(scale, scale);
+  shadow(30, 14, 0.18); ctx.fillStyle = SURF; rr(-150, -50, 300, 100, 18); ctx.fill(); noShadow();
+  ctx.fillStyle = SITES[i][1]; rr(-130, -32, 26, 26, 7); ctx.fill();
+  text(SITES[i][0][0], -117, -13, F(900, 15), '#fff', 'center');
+  ctx.save(); rr(-96, -40, 230, 40, 0); ctx.clip(); text(SITES[i][2], -94, -12, F(850, 19), INK); ctx.restore();
+  ctx.fillStyle = 'rgba(25,25,22,.08)'; rr(-130, 8, 220, 10, 5); ctx.fill(); rr(-130, 26, 150, 10, 5); ctx.fill();
+  ctx.restore();
+}
+function pill(s, x, y, { bg = SURF, color = INK, size = 30, alpha = 1, icon = null } = {}) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.font = F(850, size);
+  const tw = ctx.measureText(s).width + (icon ? size * 1.3 : 0), pw = tw + size * 1.4, ph = size * 2;
+  shadow(24, 10, 0.12); ctx.fillStyle = bg; rr(x - pw / 2, y - ph / 2, pw, ph, ph / 2); ctx.fill(); noShadow();
+  let tx = x - tw / 2;
+  if (icon === 'search') { ctx.strokeStyle = ACC; ctx.lineWidth = size * 0.12; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(tx + size * 0.38, y - size * 0.05, size * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(tx + size * 0.6, y + size * 0.18); ctx.lineTo(tx + size * 0.8, y + size * 0.38); ctx.stroke(); tx += size * 1.3; }
+  ctx.fillStyle = color; ctx.textBaseline = 'middle'; ctx.fillText(s, tx, y + 2);
+  ctx.restore();
+}
+function bubble(s, x, y, alpha) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.font = F(850, 32);
+  const w = ctx.measureText(s).width + 52, h = 72;
+  shadow(30, 12, 0.14); ctx.fillStyle = SURF; rr(x - w / 2, y - h, w, h, [24, 24, 24, 8]); ctx.fill(); noShadow();
+  ctx.fillStyle = INK; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y - h / 2 + 2);
+  ctx.restore();
+}
+function sparkles(cx, cy, p) {
+  if (p <= 0 || p >= 1) return;
+  const cols = ['#f7c9b6', '#f6dfa0', '#c9e4d4', '#d9d6f5', '#cfe6f2', ACC];
+  for (let k = 0; k < 18; k++) {
+    const a = (k / 18) * Math.PI * 2, d = 40 + eOut(p) * 230, s = 14 * (1 - p);
+    ctx.fillStyle = cols[k % cols.length]; ctx.globalAlpha = 1 - p;
+    ctx.fillRect(cx + Math.cos(a) * d - s / 2, cy + Math.sin(a) * d * 0.8 - s / 2, s, s);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ---------- scenes ----------
+// 1. Tabs pile up (0–6)
+function s1(t) {
+  background(t);
+  const a = eOut(prog(t, 0.1, 0.7));
+  headline('Tabs ', 'pile up.', 230, a, 104, eOut(prog(t, 0.5, 1.3)));
+  const n = Math.round(lerp(4, N, eInOut(prog(t, 0.6, 4.6))));
+  const bw = 1500, by = 330 + (1 - eOut(prog(t, 0.2, 1))) * 60;
+  browser(W / 2 - bw / 2, by, bw, 450, { n, active: Math.min(n - 1, N - 1), alpha: eOut(prog(t, 0.2, 0.9)) });
+  pill(`${n} tabs open`, W / 2, 870, { alpha: eOut(prog(t, 1.2, 1.8)), size: 32 });
+}
+// 2. Forgotten (0–6)
+function s2(t) {
+  background(t);
+  const a = eOut(prog(t, 0, 0.5));
+  headline('Most of them, ', 'forgotten.', 230, a, 96, eOut(prog(t, 0.4, 1.2)));
+  const g = eInOut(prog(t, 0.6, 2.2));
+  const bw = 1500, b = browser(W / 2 - bw / 2, 330, bw, 450, { ghost: g });
+  // little "days untouched" tags popping above some tabs
+  [3, 8, 13, 18, 23, 28].forEach((i, k) => {
+    const p = eBack(prog(t, 1.2 + k * 0.18, 1.6 + k * 0.18));
+    if (p <= 0) return;
+    const [x] = b.tabCenter(i);
+    const lbl = ['3 weeks', '5 weeks', '1 month', '6 weeks', '2 months', '7 weeks'][k];
+    ctx.save(); ctx.translate(x, 352 - 22 * p); ctx.scale(p, p); pill(lbl, 0, 0, { bg: INK, color: PAPER, size: 20 }); ctx.restore();
+  });
+  pill('29 tabs untouched for 7+ days · 2.4 GB of memory', W / 2, 870, { alpha: eOut(prog(t, 2.2, 2.8)), size: 30 });
+}
+// 3. Meet Mochi (0–6)
+function s3(t) {
+  background(t);
+  headline('Meet ', 'Mochi.', 230, eOut(prog(t, 0, 0.5)), 110, eOut(prog(t, 0.4, 1.2)));
+  text('A tiny pet that eats the tabs you forgot.', W / 2, 330, F(700, 40), MUTED, 'center', eOut(prog(t, 0.5, 1.1)));
+  const crack = 2.4;
+  if (t < crack) {
+    const wob = Math.sin(t * 16) * 3 * prog(t, 0.9, crack);
+    egg(W / 2, 680 + Math.sin(t * 3) * 4, 13 * eBack(prog(t, 0.2, 0.9)), wob, t > crack - 0.6);
+  } else {
+    const p = prog(t, crack, crack + 0.6);
+    sparkles(W / 2, 640, prog(t, crack, crack + 1.1));
+    const hop = Math.abs(Math.sin((t - crack) * 4)) * 26 * (1 - prog(t, crack + 0.6, crack + 1.8));
+    pet(W / 2, 720 - hop, 11 * eBack(p), { face: t > crack + 1.4 ? 'happy' : 'wide', bob: Math.round(Math.sin(t * 3)) });
+    bubble('Got any old tabs?', W / 2 + 250, 470, eBack(prog(t, crack + 1.3, crack + 1.7)));
+  }
+}
+// 4. Feed it (0–8)
+function s4(t) {
+  background(t);
+  headline('Feed it. ', 'Get memory back.', 190, eOut(prog(t, 0, 0.5)), 92, eOut(prog(t, 0.4, 1.2)));
+  const bw = 1500, bx = W / 2 - bw / 2, by = 260;
+  const start = 1.0, per = 0.13;
+  const order = EATEN; // eat them one after another
+  const eatT = (k) => start + k * per;
+  const gone = (i) => { const k = order.indexOf(i); return k < 0 ? 0 : eInOut(prog(t, eatT(k), eatT(k) + 0.35)); };
+  const b = browser(bx, by, bw, 300, { ghost: 1, gone });
+  const px = W / 2, py = 840;
+  // flying cards from the strip into the pet's mouth
+  order.forEach((i, k) => {
+    const p = prog(t, eatT(k), eatT(k) + 0.6);
+    if (p <= 0 || p >= 1) return;
+    const [sx, sy] = b.tabCenter(i);
+    const e = eInOut(p);
+    const x = lerp(sx, px, e), y = lerp(sy, py - 40, e) - Math.sin(e * Math.PI) * 120;
+    tabCard(i, x, y, lerp(0.7, 0.05, e), (k % 2 ? 1 : -1) * 0.3 * e, 1 - prog(p, 0.85, 1));
+  });
+  const eaten = order.filter((_, k) => t > eatT(k) + 0.6).length;
+  const munching = t > start && t < eatT(order.length) + 0.6;
+  pet(px, py, 8, { face: munching ? 'happy' : eaten ? 'happy' : 'dot', eating: munching && Math.floor(t * 8) % 2 === 0, bob: munching ? Math.round(Math.sin(t * 22)) : Math.round(Math.sin(t * 3)) });
+  const gb = (2.4 * eaten / order.length).toFixed(1);
+  pill(`${eaten} tabs eaten · about ${gb} GB back`, W / 2 + 470, 760, { bg: ACC, color: PAPER, size: 32, alpha: eOut(prog(t, 1.2, 1.6)) });
+  pill('Never pinned, playing or the tab you’re on', W / 2 - 480, 760, { size: 26, alpha: eOut(prog(t, 4.8, 5.3)) });
+}
+// 5. Search the belly (0–7)
+function s5(t) {
+  background(t);
+  const out = 1 - eOut(prog(t, 4.0, 4.5));       // headline + search fade out
+  const inB = eOut(prog(t, 4.2, 4.8));           // browser fades in at the top
+  headline('Nothing is lost. ', 'Search one word.', 190, eOut(prog(t, 0, 0.5)) * out, 88, eOut(prog(t, 0.4, 1.2)));
+  const q = 'kyoto', typed = q.slice(0, Math.floor(prog(t, 0.9, 1.9) * q.length + 0.0001));
+  const cursor = t < 2.4 && Math.floor(t * 3) % 2 === 0 ? '|' : '';
+  pill((typed || '') + cursor || ' ', W / 2, 320, { icon: 'search', size: 38, alpha: eOut(prog(t, 0.5, 0.9)) * out });
+  const found = 3; // Hoshinoya Kyoto ryokan
+  const land = eInOut(prog(t, 5.3, 5.8));
+  let b = null;
+  if (inB > 0) {
+    const bw = 1500;
+    b = browser(W / 2 - bw / 2, 120, bw, 300, {
+      gone: (i) => (i === found ? 1 - land : KEPT.has(i) ? 0 : 1), highlight: found, hiP: 1 - prog(t, 6.2, 7), alpha: inB,
+    });
+  }
+  const px = W / 2, py = 900;
+  ctx.save(); const g = ctx.createRadialGradient(px, py - 60, 20, px, py - 60, 340);
+  g.addColorStop(0, 'rgba(40,112,79,.16)'); g.addColorStop(1, 'rgba(40,112,79,0)'); ctx.fillStyle = g; ctx.fillRect(px - 400, py - 420, 800, 600); ctx.restore();
+  const p = eBack(prog(t, 2.2, 3.0));
+  const fly = eInOut(prog(t, 4.6, 5.5));
+  if (t > 2.2 && t < 5.6) {
+    let tx = W / 2, ty = 168;
+    if (b) { const c = b.tabCenter(found); tx = c[0]; ty = c[1]; }
+    const x = lerp(px, tx, fly), y = lerp(lerp(py - 80, 590, p), ty, fly);
+    tabCard(found, x, y, lerp(lerp(0.2, 1.7, p), 0.45, fly), -0.03 * (1 - fly), 1 - prog(t, 5.35, 5.6));
+    pill('Click to bring it back', W / 2, 730, { bg: INK, color: PAPER, size: 26, alpha: eOut(prog(t, 3.1, 3.5)) * (1 - prog(t, 4.3, 4.6)) });
+  }
+  pet(px, py, 8, { face: t > 2.2 ? 'happy' : 'dot', bob: Math.round(Math.sin(t * 3)) });
+  pill('Back in your browser', W / 2, 520, { bg: ACC, color: PAPER, size: 30, alpha: eOut(prog(t, 5.7, 6.1)) });
+}
+// 6. CTA (0–6)
+function s6(t) {
+  background(t);
+  const hop = Math.abs(Math.sin(t * 3.2)) * 18;
+  pet(620, 640 - hop, 12 * eBack(prog(t, 0, 0.6)), { face: 'happy', bob: 0 });
+  const a = eOut(prog(t, 0.3, 0.8));
+  text('Tab Pet', 1010, 430, F(950, 150), INK, 'left', a);
+  ctx.save(); ctx.globalAlpha = eOut(prog(t, 0.5, 1)); ctx.font = F(850, 46);
+  ctx.fillStyle = MUTED; ctx.fillText('Auto-archive for your tabs,', 1014, 520);
+  ctx.fillText('run by a pet.', 1014, 578); ctx.restore();
+  ['Chrome', 'Edge', 'Firefox', 'Safari'].forEach((b, k) => {
+    const p = eBack(prog(t, 0.9 + k * 0.12, 1.3 + k * 0.12));
+    if (p <= 0) return;
+    ctx.save(); ctx.translate(1014 + [0, 175, 320, 495][k] + 70, 680); ctx.scale(p, p); pill(b, 0, 0, { size: 28 }); ctx.restore();
+  });
+  const u = eOut(prog(t, 1.6, 2.1));
+  text('Free and open source', 1014, 800, F(800, 34), ACC, 'left', u);
+  text('indiecoderlab.com/tab-pet', 1014, 856, F(900, 40), INK, 'left', u);
+  underline(1014, 878, 540, eOut(prog(t, 2.0, 2.8)));
+}
+
+const SCENES = { s1, s2, s3, s4, s5, s6 };
+window.frame = (name, t) => { SCENES[name](t); return cv.toDataURL('image/jpeg', 0.92); };
+window.draw = (name, t) => { SCENES[name](t); };
+await document.fonts.load(F(900, 40)); await document.fonts.load(F(700, 40)); await document.fonts.ready;
+window.ready = true;
+</script>
