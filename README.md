@@ -2,13 +2,13 @@
 
 **Website:** https://indiecoderlab.com/tab-pet · **Privacy:** https://indiecoderlab.com/tab-pet-privacy · **Terms:** https://indiecoderlab.com/tab-pet-terms
 
-A tiny pet in your toolbar that eats the tabs you forgot. It saves every one in its belly, so nothing is lost, and shows how much memory you got back. Arc-style auto-archive for every browser.
+A tiny pet in your toolbar that eats the tabs you forgot. It saves every one in its belly, so nothing is lost, and shows how much memory you got back.
 
 - **Hatch:** pick one of three eggs (Cozy, Spooky-cute, Mythic) and get one of 24 cute or fantasy pets. Rarity is 70% common, 25% rare, 5% legendary. Any pet can be shiny (1 in 50). You get one free re-hatch in the first day.
 - **Tab autopsy:** on first run, your tab count, windows, ghost tabs and oldest tab add up to a personality: Minimalist, Hoarder, Ghost Collector, Chaos Goblin or Researcher.
 - **Eat:** ghost tabs (untouched for 7 days by default), duplicates, or everything (tab bankruptcy). Pinned, playing, grouped and currently-viewed tabs are never eaten.
 - **Belly:** every eaten tab is searchable and can be brought back.
-- **Autopilot:** eats ghost tabs every hour, like Arc's auto-archive.
+- **Autopilot:** eats forgotten tabs every hour, so your browser stays light.
 - **Grows:** baby → teen → grown with XP (1 per tab eaten, 25 per tidy day). A new egg for every 100 tabs eaten or 7 tidy days. Switch pets any time.
 - **Toolbar:** the pet's face, with the tab count on a badge coloured by mood.
 - **Share cards:** "Mochi ate 52 tabs, about 1.9 GB back" and "My tab personality".
