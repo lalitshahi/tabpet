@@ -21,7 +21,7 @@ Then feed it. It eats the tabs you forgot, the duplicates, or everything at once
 
 Nothing is lost. Every tab goes into your pet's belly, where you can search it and bring it back in one click.
 
-Turn on autopilot and it snacks on forgotten tabs every hour, like Arc's auto-archive.
+Turn on autopilot and it snacks on forgotten tabs every hour, so your browser stays light without you thinking about it.
 
 Keep your tabs tidy and your pet grows from baby to grown, and you earn new eggs to hatch.
 
